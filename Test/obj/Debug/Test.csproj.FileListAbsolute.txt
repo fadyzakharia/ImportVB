@@ -1,0 +1,9 @@
+C:\Users\FADI\documents\visual studio 2013\Projects\Test\Test\bin\Debug\Test.exe
+C:\Users\FADI\documents\visual studio 2013\Projects\Test\Test\bin\Debug\Test.pdb
+C:\Users\FADI\documents\visual studio 2013\Projects\Test\Test\obj\Debug\Test.csprojResolveAssemblyReference.cache
+C:\Users\FADI\documents\visual studio 2013\Projects\Test\Test\obj\Debug\Test.csproj.GenerateResource.Cache
+C:\Users\FADI\documents\visual studio 2013\Projects\Test\Test\obj\Debug\Test.exe
+C:\Users\FADI\documents\visual studio 2013\Projects\Test\Test\obj\Debug\Test.pdb
+C:\Users\FADI\documents\visual studio 2013\Projects\Test\Test\bin\Debug\Test.exe.config
+C:\Users\FADI\documents\visual studio 2013\Projects\Test\Test\obj\Debug\Evaluation_LoadPatient.Properties.Resources.resources
+C:\Users\FADI\documents\visual studio 2013\Projects\Test\Test\obj\Debug\Evaluation_LoadPatient.MainWindow.resources
