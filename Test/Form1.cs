@@ -30,7 +30,6 @@ namespace Evaluation_LoadPatient
         }
 
 
-
         private void btnClose_Click(object sender, EventArgs e)
         {
             this.Close();
@@ -126,6 +125,9 @@ namespace Evaluation_LoadPatient
 
                 try
                 {
+                    /**********************************************************************************/
+                    /**********************************************************************************/
+                    // Insert table Patient
                     foreach (DataRow importRow in importData.Rows)
                     {
                         /*
@@ -216,12 +218,8 @@ namespace Evaluation_LoadPatient
                             //MessageBox.Show("ZAX2");
                         }
 
-                        
                         //if (expiry_am1 < DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MinValue.ToString()) || expiry_am1 > DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MaxValue.ToString()))
                         //MessageBox.Show(importRow["Exp.year"].ToString());
-                        
-
-
                         //cmd.Parameters.AddWithValue("@Expiry_AM", importRow["Exp.year"] + "-" + importRow["Exp.Month"] + "-01");
 
                         cmd.Parameters.AddWithValue("@Note", importRow["Note"]);
@@ -236,15 +234,46 @@ namespace Evaluation_LoadPatient
                         cmd.Parameters.AddWithValue("@Country", importRow["Country"]);
                         cmd.Parameters.AddWithValue("@ZipCode", importRow["ZipCode"]);
 
-                        ////////////////////
                         cmd.ExecuteNonQuery();
                     }
+                    // End Insert Table Patient
+                    /**********************************************************************************/
+                    /**********************************************************************************/
+                    // Update table Patient
+                    SqlDataReader dr;
+                    string qr = "   SELECT distinct a.Id,g.fr as GenderLookup,l.fr as LanguageLookup,m.fr as MaritalStatusLookup,s.fr as StatusLookup "+
+                                    "FROM Lookup as a "+
+                                    "left join(select id,fr from Lookup where Type = 'Gender') as g on g.id = a.id "+
+                                    "left join(select id,fr from Lookup where Type = 'LANGUAGE') as L on L.id = a.id "+
+                                    "left join(select id,fr from Lookup where Type = 'MARITALSTATUS') as m on m.id = a.id "+ 
+                                    "left join(select id,fr from Lookup where Type = 'STATUS') as s on s.id = a.id ";
+                    SqlCommand cmd1 = new SqlCommand(qr,conn);
+                    dr = cmd1.ExecuteReader();
+                    if(dr.HasRows)
+                    {
+                        while(dr.Read())
+                        {
+                            //MessageBox.Show(dr["Id"].ToString());
+                            string qr_upd = "update patient set GenderLookup = @GenderLookup,LanguageLookup = @LanguageLookup ,MaritalStatusLookup= @MaritalStatusLookup,StatusLookup = @StatusLookup where id = @id";
+                            SqlCommand upd1 = new SqlCommand(qr_upd, conn);
+
+                            upd1.Parameters.AddWithValue("@GenderLookup", dr["GenderLookup"].ToString());
+                            upd1.Parameters.AddWithValue("@LanguageLookup", dr["LanguageLookup"].ToString());
+                            upd1.Parameters.AddWithValue("@MaritalStatusLookup", dr["MaritalStatusLookup"].ToString());
+                            upd1.Parameters.AddWithValue("@StatusLookup", dr["StatusLookup"].ToString());
+                            upd1.Parameters.AddWithValue("@id", dr["Id"].ToString());
+                            upd1.ExecuteNonQuery();
+                            //MessageBox.Show("XXXX");
+                        }
+                    }
+                    // End Update table Patient
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("Error in Data !!!");
                     Console.WriteLine(e.Message);
                 }
+                
             }
             
         }
