@@ -68,7 +68,7 @@ namespace Evaluation_LoadPatient
                         return null;
                     }
 
-                    string[] headerColumns = header.Split(new string[] {"\";\""},StringSplitOptions.None);
+                    string[] headerColumns = header.Split(new string[] { "\";\"" }, StringSplitOptions.None);
 
                     //header.HasFieldsEnclosedInQuotes = true;
                     //HasFieldsEnclosedInQuotes = true;
@@ -89,7 +89,7 @@ namespace Evaluation_LoadPatient
                         //Console.WriteLine(line);
                         if (string.IsNullOrEmpty(line)) continue;
 
-                        string[] fields = line.Split(new string[] {"\";\""},StringSplitOptions.None);
+                        string[] fields = line.Split(new string[] { "\";\"" }, StringSplitOptions.None);
 
                         //MessageBox.Show(fields[0]);
 
@@ -100,12 +100,9 @@ namespace Evaluation_LoadPatient
                             importedRow[i] = fields[i];
                             importedRow[i] = fields[i].Trim('"');
                         }
-
                         importedData.Rows.Add(importedRow);
-
                     }
                 }
-
             }
             catch (Exception e)
             {
@@ -118,7 +115,7 @@ namespace Evaluation_LoadPatient
         private void SaveImportDataToDatabase(DataTable importData)
         {
             string connectionString = "Data Source=FADY-PC\\SQLEXPRESS;Initial Catalog=integrationTest;Integrated Security=True";
-          
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -208,6 +205,7 @@ namespace Evaluation_LoadPatient
                         if (importRow["NoAssMaladie"].ToString() == "")
                         {
                             cmd.Parameters.AddWithValue("@Expiry_AM", DBNull.Value);
+                            //cmd.Parameters.AddWithValue("@GenderLookup", DBNull.Value);
                             //MessageBox.Show("ZAX1");
                         }
                         else
@@ -215,7 +213,42 @@ namespace Evaluation_LoadPatient
                             string expiry_am = importRow["Exp.year"] + "-" + importRow["Exp.Month"] + "-01";
                             DateTime expiry_am1 = DateTime.Parse(expiry_am);
                             cmd.Parameters.AddWithValue("@Expiry_AM", expiry_am1);
-                            //MessageBox.Show("ZAX2");
+                            /*
+                            int sex_num = 0;
+                            string sex = importRow["NoAssMaladie"].ToString().Substring(6, 2);
+                            sex_num = Convert.ToInt32(sex);
+                            if (sex_num > 50)
+                            {
+                                SqlDataReader dr1;
+                                string qr1 = "SELECT Id FROM Lookup where Type = 'Gender' and FR = 'Femme' ";
+                                SqlCommand cmd1 = new SqlCommand(qr1,conn);
+                                dr1 = cmd1.ExecuteReader();
+                                if (dr1.HasRows)
+                                {
+                                    while (dr1.Read())
+                                    {
+                                        MessageBox.Show(dr1["Id"].ToString());
+                                        //cmd.Parameters.AddWithValue("@GenderLookup", dr1["Id"]);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                SqlDataReader dr2;
+                                string qr2 = "SELECT Id FROM Lookup where Type = 'Gender' and FR = 'Homme' ";
+                                SqlCommand cmd2 = new SqlCommand(qr2, conn);
+                                dr2 = cmd2.ExecuteReader();
+                                if (dr2.HasRows)
+                                {
+                                    while (dr2.Read())
+                                    {
+                                        MessageBox.Show(dr2["Id"].ToString());
+                                       // cmd.Parameters.AddWithValue("@GenderLookup", dr2["Id"]);
+                                    }
+                                }
+                            }*/
+                           //MessageBox.Show(zax);
+                           //MessageBox.Show(importRow["NoAssMaladie"].ToString());
                         }
 
                         //if (expiry_am1 < DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MinValue.ToString()) || expiry_am1 > DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MaxValue.ToString()))
@@ -239,45 +272,14 @@ namespace Evaluation_LoadPatient
                     // End Insert Table Patient
                     /**********************************************************************************/
                     /**********************************************************************************/
-                    // Update table Patient
-                    SqlDataReader dr;
-                    string qr = "   SELECT distinct a.Id,g.fr as GenderLookup,l.fr as LanguageLookup,m.fr as MaritalStatusLookup,s.fr as StatusLookup "+
-                                    "FROM Lookup as a "+
-                                    "left join(select id,fr from Lookup where Type = 'Gender') as g on g.id = a.id "+
-                                    "left join(select id,fr from Lookup where Type = 'LANGUAGE') as L on L.id = a.id "+
-                                    "left join(select id,fr from Lookup where Type = 'MARITALSTATUS') as m on m.id = a.id "+ 
-                                    "left join(select id,fr from Lookup where Type = 'STATUS') as s on s.id = a.id ";
-                    SqlCommand cmd1 = new SqlCommand(qr,conn);
-                    dr = cmd1.ExecuteReader();
-                    if(dr.HasRows)
-                    {
-                        while(dr.Read())
-                        {
-                            //MessageBox.Show(dr["Id"].ToString());
-                            string qr_upd = "update patient set GenderLookup = @GenderLookup,LanguageLookup = @LanguageLookup ,MaritalStatusLookup= @MaritalStatusLookup,StatusLookup = @StatusLookup where id = @id";
-                            SqlCommand upd1 = new SqlCommand(qr_upd, conn);
-
-                            upd1.Parameters.AddWithValue("@GenderLookup", dr["GenderLookup"].ToString());
-                            upd1.Parameters.AddWithValue("@LanguageLookup", dr["LanguageLookup"].ToString());
-                            upd1.Parameters.AddWithValue("@MaritalStatusLookup", dr["MaritalStatusLookup"].ToString());
-                            upd1.Parameters.AddWithValue("@StatusLookup", dr["StatusLookup"].ToString());
-                            upd1.Parameters.AddWithValue("@id", dr["Id"].ToString());
-                            upd1.ExecuteNonQuery();
-                            //MessageBox.Show("XXXX");
-                        }
-                    }
-                    // End Update table Patient
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("Error in Data !!!");
                     Console.WriteLine(e.Message);
                 }
-                
             }
-            
         }
-
     }
     /*
     internal class Patient
