@@ -201,21 +201,25 @@ namespace Evaluation_LoadPatient
                         //cmd.Parameters.AddWithValue("@Date_Of_Birth", importRow["Date Of Birth"]);
                         //cmd.Parameters.AddWithValue("@Date_Of_Birth", dob);
 
-
                         cmd.Parameters.AddWithValue("@NoAssMaladie", importRow["NoAssMaladie"]);
 
-                        string expiry_am = importRow["Exp.year"] + "-" + importRow["Exp.Month"] + "-01";
-                        DateTime expiry_am1 = DateTime.Parse(expiry_am);
-                        if (expiry_am1 < DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MinValue.ToString()) || expiry_am1 > DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MaxValue.ToString()))
+                        if (importRow["NoAssMaladie"].ToString() == "")
                         {
-
                             cmd.Parameters.AddWithValue("@Expiry_AM", DBNull.Value);
+                            //MessageBox.Show("ZAX1");
                         }
-
                         else
                         {
+                            string expiry_am = importRow["Exp.year"] + "-" + importRow["Exp.Month"] + "-01";
+                            DateTime expiry_am1 = DateTime.Parse(expiry_am);
                             cmd.Parameters.AddWithValue("@Expiry_AM", expiry_am1);
+                            //MessageBox.Show("ZAX2");
                         }
+
+                        
+                        //if (expiry_am1 < DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MinValue.ToString()) || expiry_am1 > DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MaxValue.ToString()))
+                        //MessageBox.Show(importRow["Exp.year"].ToString());
+                        
 
 
                         //cmd.Parameters.AddWithValue("@Expiry_AM", importRow["Exp.year"] + "-" + importRow["Exp.Month"] + "-01");
