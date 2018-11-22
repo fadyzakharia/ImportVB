@@ -127,13 +127,61 @@ namespace Evaluation_LoadPatient
                     // Insert table Patient
                     foreach (DataRow importRow in importData.Rows)
                     {
+                        
                         /*
                         SqlCommand cmd = new SqlCommand("insert into Patient(Id,FirstName,LastName,DateOfBirth,NAM,NAMExpiryDate,Note,Mother_FirstName,Mother_LastName,Father_FirstName,Father_LastName,Email,Address,Country,ZipCode)"+
                                                         "VALUES(@PatientGuid,@FirstName,@LastName,@Date_Of_Birth,@NoAssMaladie,@Expiry_AM,@Note,@MotherFirstName,@MotherLastname,@FatherFirstName,@FatherLastname,@Email,@Address,@Country,@ZipCode )", 
                                                         conn);*/
-                        SqlCommand cmd = new SqlCommand("insert into Patient(Id,FirstName,LastName,DateOfBirth,NAM,NAMExpiryDate,Note,Mother_FirstName,Mother_LastName,Father_FirstName,Father_LastName,Email,Address,Country,ZipCode)" +
-                                                        "VALUES(@PatientGuid,@FirstName,@LastName,@Date_Of_Birth,@NoAssMaladie,@Expiry_AM,@Note,@MotherFirstName,@MotherLastname,@FatherFirstName,@FatherLastname,@Email,@Address,@Country,@ZipCode )",
+                        SqlCommand cmd = new SqlCommand("insert into Patient(Id,FirstName,LastName,DateOfBirth,NAM,NAMExpiryDate,Note,Mother_FirstName,Mother_LastName,Father_FirstName,Father_LastName,Email,Address,Country,ZipCode,GenderLookup,MaritalStatusLookup,LanguageLookup,StatusLookup)" +
+                                                        "VALUES(@PatientGuid,@FirstName,@LastName,@Date_Of_Birth,@NoAssMaladie,@Expiry_AM,@Note,@MotherFirstName,@MotherLastname,@FatherFirstName,@FatherLastname,@Email,@Address,@Country,@ZipCode,@GenderLookup,@MaritalStatusLookup,@LanguageLookup,@StatusLookup)",
                                                         conn);
+                        // Risk Factor
+                        if (importRow["Smoke"].ToString() == "Y" || importRow["SmokeInThePast"].ToString() == "Y" || importRow["TakeDrugs"].ToString() == "Y")
+                        {
+
+                            try
+                            {
+                                var guid = Guid.NewGuid().ToString();
+                                string txtRF = "";
+                                //MessageBox.Show(importRow["PatientGuid"].ToString());
+
+
+                                SqlCommand cmd_rf = new SqlCommand("insert into RiskFactor(Id,PatientId,RiskFactor)" +
+                                                                   "VALUES(@RFId,@RFPatientId,@RiskFactor)",
+                                                                    conn);
+                                cmd_rf.Parameters.AddWithValue("@RFId", guid.ToString());
+                                cmd_rf.Parameters.AddWithValue("@RFPatientId", importRow["PatientGuid"]);
+                                
+                                if(importRow["Smoke"].ToString() == "Y")
+                                {
+                                    if (importRow["SmokeInThePast"].ToString() == "Y" || importRow["SmokeInThePast"].ToString() == "Y")
+                                        txtRF = "Smoke /";
+                                    else
+                                        txtRF = "Smoke ";
+                                }
+                                if (importRow["SmokeInThePast"].ToString() == "Y")
+                                {
+                                    txtRF = "Smoke /";
+                                    if (importRow["SmokeInThePast"].ToString() == "Y")
+                                          txtRF = txtRF+" Smoke In The Past /";
+                                    else
+                                        txtRF = txtRF + " Smoke In The Past "; 
+                                }
+                                if (importRow["SmokeInThePast"].ToString() == "Y")
+                                {
+                                    txtRF = txtRF + " Take Drugs";
+                                }
+
+                                cmd_rf.Parameters.AddWithValue("@RiskFactor", txtRF);
+                                cmd_rf.ExecuteNonQuery();
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine("Error Risk Factor !!!");
+                                Console.WriteLine(e.Message);
+                            }
+                        }
+                        // End Risk Factor
                         /*
                         SqlCommand cmd = new SqlCommand("insert into Patient(Id,FirstName,LastName,DateOfBirth,NAM,NAMExpiryDate,Note,Mother_FirstName,Mother_LastName,Father_FirstName,Father_LastName,Email,Address,Country,ZipCode)" +
                                                         "VALUES(@PatientGuid,@FirstName,@LastName,@Date_Of_Birth,@NoAssMaladie,@Expiry_AM,@Note,@MotherFirstName)",
@@ -191,7 +239,6 @@ namespace Evaluation_LoadPatient
 
                             cmd.Parameters.AddWithValue("@Date_Of_Birth", DBNull.Value);
                         }
-
                         else
                         {
                             cmd.Parameters.AddWithValue("@Date_Of_Birth", dob);
@@ -205,7 +252,7 @@ namespace Evaluation_LoadPatient
                         if (importRow["NoAssMaladie"].ToString() == "")
                         {
                             cmd.Parameters.AddWithValue("@Expiry_AM", DBNull.Value);
-                            //cmd.Parameters.AddWithValue("@GenderLookup", DBNull.Value);
+                            cmd.Parameters.AddWithValue("@GenderLookup", DBNull.Value);
                             //MessageBox.Show("ZAX1");
                         }
                         else
@@ -213,47 +260,156 @@ namespace Evaluation_LoadPatient
                             string expiry_am = importRow["Exp.year"] + "-" + importRow["Exp.Month"] + "-01";
                             DateTime expiry_am1 = DateTime.Parse(expiry_am);
                             cmd.Parameters.AddWithValue("@Expiry_AM", expiry_am1);
-                            /*
+                            
                             int sex_num = 0;
                             string sex = importRow["NoAssMaladie"].ToString().Substring(6, 2);
                             sex_num = Convert.ToInt32(sex);
+                            //MessageBox.Show(sex_num.ToString());
                             if (sex_num > 50)
                             {
-                                SqlDataReader dr1;
-                                string qr1 = "SELECT Id FROM Lookup where Type = 'Gender' and FR = 'Femme' ";
-                                SqlCommand cmd1 = new SqlCommand(qr1,conn);
-                                dr1 = cmd1.ExecuteReader();
-                                if (dr1.HasRows)
-                                {
-                                    while (dr1.Read())
+                                SqlCommand command = new SqlCommand("SELECT Id FROM Lookup where Type = 'Gender' and FR = 'Femme' ", conn);
+                                
+                                    using (SqlDataReader reader = command.ExecuteReader())
                                     {
-                                        MessageBox.Show(dr1["Id"].ToString());
-                                        //cmd.Parameters.AddWithValue("@GenderLookup", dr1["Id"]);
+                                        while (reader.Read())
+                                        {
+                                            //MessageBox.Show(reader[0].ToString());
+                                            cmd.Parameters.AddWithValue("@GenderLookup", reader[0].ToString());
+                                        }
                                     }
-                                }
                             }
                             else
                             {
-                                SqlDataReader dr2;
-                                string qr2 = "SELECT Id FROM Lookup where Type = 'Gender' and FR = 'Homme' ";
-                                SqlCommand cmd2 = new SqlCommand(qr2, conn);
-                                dr2 = cmd2.ExecuteReader();
-                                if (dr2.HasRows)
+                                SqlCommand command = new SqlCommand("SELECT Id FROM Lookup where Type = 'Gender' and FR = 'Homme' ", conn);
+
+                                using (SqlDataReader reader = command.ExecuteReader())
                                 {
-                                    while (dr2.Read())
+
+                                    while (reader.Read())
                                     {
-                                        MessageBox.Show(dr2["Id"].ToString());
-                                       // cmd.Parameters.AddWithValue("@GenderLookup", dr2["Id"]);
+                                        //MessageBox.Show(reader[0].ToString());
+                                        cmd.Parameters.AddWithValue("@GenderLookup", reader[0].ToString());
                                     }
                                 }
-                            }*/
+                            }
                            //MessageBox.Show(zax);
                            //MessageBox.Show(importRow["NoAssMaladie"].ToString());
+                        }
+                        
+                        // LookUp Statut Marital
+                        if (importRow["Civil State"].ToString() == "")
+                        {
+
+                            cmd.Parameters.AddWithValue("@MaritalStatusLookup", DBNull.Value);
+                            //MessageBox.Show("Empty MS");
+                        }
+                        else
+                        {
+                            string ms = importRow["Civil State"].ToString().Substring(0, 1);
+                            
+                            //MessageBox.Show(ms);
+                            string q_ms = "";
+                            if(ms[0] =='D')
+                            {
+                                q_ms = "SELECT Id FROM Lookup where Type = 'MARITALSTATUS' and En = 'Divorced' ";
+                            }
+                            else if(ms[0] =='M')
+                            {
+                                q_ms = "SELECT Id FROM Lookup where Type = 'MARITALSTATUS' and En = 'Married' ";
+                            }
+                            else if (ms[0] =='C' || ms[0] =='U')
+                            {
+                                q_ms = "SELECT Id FROM Lookup where Type = 'MARITALSTATUS' and En = 'Common-Law Union' ";
+                            }
+                            else if(ms[0] =='S')
+                            {
+                                q_ms = "SELECT Id FROM Lookup where Type = 'MARITALSTATUS' and En = 'Separated' ";
+                            }
+                            else if (ms[0] =='V' || ms[0] == 'W')
+                            {
+                                q_ms = "SELECT Id FROM Lookup where Type = 'MARITALSTATUS' and En = 'Widowed' ";
+                            }
+                            //MessageBox.Show(q_ms);
+                            SqlCommand command1 = new SqlCommand(q_ms, conn);
+                            using (SqlDataReader reader1 = command1.ExecuteReader())
+                            {
+
+                                while (reader1.Read())
+                                {
+                                    //MessageBox.Show(reader1[0].ToString());
+                                    cmd.Parameters.AddWithValue("@MaritalStatusLookup", reader1[0].ToString());
+                                }
+                            }
                         }
 
                         //if (expiry_am1 < DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MinValue.ToString()) || expiry_am1 > DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MaxValue.ToString()))
                         //MessageBox.Show(importRow["Exp.year"].ToString());
                         //cmd.Parameters.AddWithValue("@Expiry_AM", importRow["Exp.year"] + "-" + importRow["Exp.Month"] + "-01");
+
+                        // LanguageLookup
+                        string q_lan = "";
+                        if (importRow["Langue"].ToString() == "")
+                        {
+                            q_lan = "SELECT Id FROM Lookup where Type = 'LANGUAGE' and En = 'French' ";
+                        }
+                        else
+                        {
+                            string lan = importRow["Langue"].ToString().Substring(0, 1);
+
+                            //MessageBox.Show(ms);
+                            
+                            if (lan[0] == 'F')
+                            {
+                                q_lan = "SELECT Id FROM Lookup where Type = 'LANGUAGE' and En = 'French' ";
+                            }
+                            else if (lan[0] == 'E' || lan[0] == 'A')
+                            {
+                                q_lan = "SELECT Id FROM Lookup where Type = 'LANGUAGE' and En = 'English' ";
+                            }
+                            else
+                            {
+                                q_lan = "SELECT Id FROM Lookup where Type = 'LANGUAGE' and En = 'French' ";
+                            }
+                        }
+                        SqlCommand command2 = new SqlCommand(q_lan, conn);
+                        using (SqlDataReader reader2 = command2.ExecuteReader())
+                        {
+
+                            while (reader2.Read())
+                            {
+                                //MessageBox.Show(reader1[0].ToString());
+                                cmd.Parameters.AddWithValue("@LanguageLookup", reader2[0].ToString());
+                            }
+                        }
+                        // End Language
+
+                        // StatusLookup
+                        string q_stat = "";
+                        if (importRow["IsDead"].ToString() == "Y")
+                        {
+                            q_stat = "SELECT Id FROM Lookup where Type = 'STATUS' and En = 'Deceased' ";
+                        }
+                        else
+                        {
+                            if(importRow["Archived"].ToString() == "Y")
+                            {
+                                q_stat = "SELECT Id FROM Lookup where Type = 'STATUS' and En = 'Deactivated' ";
+                            }
+                            else 
+                            {
+                                q_stat = "SELECT Id FROM Lookup where Type = 'STATUS' and En = 'Actif' ";
+                            }
+                        }
+                        SqlCommand command3 = new SqlCommand(q_stat, conn);
+                        using (SqlDataReader reader3 = command3.ExecuteReader())
+                        {
+                            while (reader3.Read())
+                            {
+                                //MessageBox.Show(reader1[0].ToString());
+                                cmd.Parameters.AddWithValue("@StatusLookup", reader3[0].ToString());
+                            }
+                        }
+                        // End StatusLookup
 
                         cmd.Parameters.AddWithValue("@Note", importRow["Note"]);
 
