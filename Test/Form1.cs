@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace Evaluation_LoadPatient
 {
@@ -70,10 +71,6 @@ namespace Evaluation_LoadPatient
 
                     string[] headerColumns = header.Split(new string[] { "\";\"" }, StringSplitOptions.None);
 
-                    //header.HasFieldsEnclosedInQuotes = true;
-                    //HasFieldsEnclosedInQuotes = true;
-                    //MessageBox.Show(headerColumns[0]);
-
                     foreach (string headerColumn in headerColumns)
                     {
                         //headerColumn.Replace('"', ' ');
@@ -90,8 +87,6 @@ namespace Evaluation_LoadPatient
                         if (string.IsNullOrEmpty(line)) continue;
 
                         string[] fields = line.Split(new string[] { "\";\"" }, StringSplitOptions.None);
-
-                        //MessageBox.Show(fields[0]);
 
                         DataRow importedRow = importedData.NewRow();
 
@@ -127,68 +122,9 @@ namespace Evaluation_LoadPatient
                     // Insert table Patient
                     foreach (DataRow importRow in importData.Rows)
                     {
-                        
-                        /*
-                        SqlCommand cmd = new SqlCommand("insert into Patient(Id,FirstName,LastName,DateOfBirth,NAM,NAMExpiryDate,Note,Mother_FirstName,Mother_LastName,Father_FirstName,Father_LastName,Email,Address,Country,ZipCode)"+
-                                                        "VALUES(@PatientGuid,@FirstName,@LastName,@Date_Of_Birth,@NoAssMaladie,@Expiry_AM,@Note,@MotherFirstName,@MotherLastname,@FatherFirstName,@FatherLastname,@Email,@Address,@Country,@ZipCode )", 
-                                                        conn);*/
-                        SqlCommand cmd = new SqlCommand("insert into Patient(Id,FirstName,LastName,DateOfBirth,NAM,NAMExpiryDate,Note,Mother_FirstName,Mother_LastName,Father_FirstName,Father_LastName,Email,Address,Country,ZipCode,GenderLookup,MaritalStatusLookup,LanguageLookup,StatusLookup)" +
-                                                        "VALUES(@PatientGuid,@FirstName,@LastName,@Date_Of_Birth,@NoAssMaladie,@Expiry_AM,@Note,@MotherFirstName,@MotherLastname,@FatherFirstName,@FatherLastname,@Email,@Address,@Country,@ZipCode,@GenderLookup,@MaritalStatusLookup,@LanguageLookup,@StatusLookup)",
+                        SqlCommand cmd = new SqlCommand("insert into Patient(Id,FirstName,LastName,DateOfBirth,NAM,NAMExpiryDate,Note,Mother_FirstName,Mother_LastName,Father_FirstName,Father_LastName,Email,Address,Country,ZipCode,GenderLookup,MaritalStatusLookup,LanguageLookup,StatusLookup,Identifier03)" +
+                                                        "VALUES(@PatientGuid,@FirstName,@LastName,@Date_Of_Birth,@NoAssMaladie,@Expiry_AM,@Note,@MotherFirstName,@MotherLastname,@FatherFirstName,@FatherLastname,@Email,@Address,@Country,@ZipCode,@GenderLookup,@MaritalStatusLookup,@LanguageLookup,@StatusLookup,@Identifier03)",
                                                         conn);
-                        // Risk Factor
-                        if (importRow["Smoke"].ToString() == "Y" || importRow["SmokeInThePast"].ToString() == "Y" || importRow["TakeDrugs"].ToString() == "Y")
-                        {
-
-                            try
-                            {
-                                var guid = Guid.NewGuid().ToString();
-                                string txtRF = "";
-                                //MessageBox.Show(importRow["PatientGuid"].ToString());
-
-
-                                SqlCommand cmd_rf = new SqlCommand("insert into RiskFactor(Id,PatientId,RiskFactor)" +
-                                                                   "VALUES(@RFId,@RFPatientId,@RiskFactor)",
-                                                                    conn);
-                                cmd_rf.Parameters.AddWithValue("@RFId", guid.ToString());
-                                cmd_rf.Parameters.AddWithValue("@RFPatientId", importRow["PatientGuid"]);
-                                
-                                if(importRow["Smoke"].ToString() == "Y")
-                                {
-                                    if (importRow["SmokeInThePast"].ToString() == "Y" || importRow["SmokeInThePast"].ToString() == "Y")
-                                        txtRF = "Smoke /";
-                                    else
-                                        txtRF = "Smoke ";
-                                }
-                                if (importRow["SmokeInThePast"].ToString() == "Y")
-                                {
-                                    txtRF = "Smoke /";
-                                    if (importRow["SmokeInThePast"].ToString() == "Y")
-                                          txtRF = txtRF+" Smoke In The Past /";
-                                    else
-                                        txtRF = txtRF + " Smoke In The Past "; 
-                                }
-                                if (importRow["SmokeInThePast"].ToString() == "Y")
-                                {
-                                    txtRF = txtRF + " Take Drugs";
-                                }
-
-                                cmd_rf.Parameters.AddWithValue("@RiskFactor", txtRF);
-                                cmd_rf.ExecuteNonQuery();
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine("Error Risk Factor !!!");
-                                Console.WriteLine(e.Message);
-                            }
-                        }
-                        // End Risk Factor
-                        /*
-                        SqlCommand cmd = new SqlCommand("insert into Patient(Id,FirstName,LastName,DateOfBirth,NAM,NAMExpiryDate,Note,Mother_FirstName,Mother_LastName,Father_FirstName,Father_LastName,Email,Address,Country,ZipCode)" +
-                                                        "VALUES(@PatientGuid,@FirstName,@LastName,@Date_Of_Birth,@NoAssMaladie,@Expiry_AM,@Note,@MotherFirstName)",
-                                                        conn);*/
-
-                        //string str = " \"A\" ";
-                        //MessageBox.Show(importRow[" \"PatientGuid\" "].ToString());
 
                         cmd.Parameters.AddWithValue("@PatientGuid", importRow["PatientGuid"]);
 
@@ -203,14 +139,12 @@ namespace Evaluation_LoadPatient
                             string[] words = s.Split(' ');
                             foreach (string word in words)
                             {
-                                //Console.WriteLine(word);
                                 ln = words[0].Replace(',', ' ');
                                 fn = words[1].Replace(',', ' ');
                             }
                         }
                         else
                         {
-                            //MessageBox.Show("2 !!!");
                             fn = Convert.ToString(importRow["FirstName"]);
                             ln = Convert.ToString(importRow["LastName"]);
                         }
@@ -230,13 +164,11 @@ namespace Evaluation_LoadPatient
                         }
                         else
                         {
-                            //Console.WriteLine("Invalid"); 
                             dob = DateTime.MinValue;
                         }
 
                         if (dob < DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MinValue.ToString()) || dob > DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MaxValue.ToString()))
                         {
-
                             cmd.Parameters.AddWithValue("@Date_Of_Birth", DBNull.Value);
                         }
                         else
@@ -244,16 +176,12 @@ namespace Evaluation_LoadPatient
                             cmd.Parameters.AddWithValue("@Date_Of_Birth", dob);
                         }
 
-                        //cmd.Parameters.AddWithValue("@Date_Of_Birth", importRow["Date Of Birth"]);
-                        //cmd.Parameters.AddWithValue("@Date_Of_Birth", dob);
-
                         cmd.Parameters.AddWithValue("@NoAssMaladie", importRow["NoAssMaladie"]);
 
                         if (importRow["NoAssMaladie"].ToString() == "")
                         {
                             cmd.Parameters.AddWithValue("@Expiry_AM", DBNull.Value);
                             cmd.Parameters.AddWithValue("@GenderLookup", DBNull.Value);
-                            //MessageBox.Show("ZAX1");
                         }
                         else
                         {
@@ -292,8 +220,6 @@ namespace Evaluation_LoadPatient
                                     }
                                 }
                             }
-                           //MessageBox.Show(zax);
-                           //MessageBox.Show(importRow["NoAssMaladie"].ToString());
                         }
                         
                         // LookUp Statut Marital
@@ -341,10 +267,6 @@ namespace Evaluation_LoadPatient
                                 }
                             }
                         }
-
-                        //if (expiry_am1 < DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MinValue.ToString()) || expiry_am1 > DateTime.Parse(System.Data.SqlTypes.SqlDateTime.MaxValue.ToString()))
-                        //MessageBox.Show(importRow["Exp.year"].ToString());
-                        //cmd.Parameters.AddWithValue("@Expiry_AM", importRow["Exp.year"] + "-" + importRow["Exp.Month"] + "-01");
 
                         // LanguageLookup
                         string q_lan = "";
@@ -423,9 +345,180 @@ namespace Evaluation_LoadPatient
                         cmd.Parameters.AddWithValue("@Country", importRow["Country"]);
                         cmd.Parameters.AddWithValue("@ZipCode", importRow["ZipCode"]);
 
+                        /**********************************************************************************/
+                        //Dictionnaire
+                        string connectionString1 = "Data Source=FADY-PC\\SQLEXPRESS;Initial Catalog=Dictionnary;Integrated Security=True";
+
+                        using (SqlConnection conn1 = new SqlConnection(connectionString1))
+                        {
+                            conn1.Open();
+
+                            if (importRow["FamilyDoctor"].ToString().Trim() != "")
+                            {
+                                //MessageBox.Show(importRow["FamilyDoctor"].ToString());
+                                string qr_doc = "SELECT Top 1 concat(FirstName,' ',LastName) as doctor " +
+                                           "FROM Doctors " +
+                                           "where substring(convert(varchar(10), RamqId), 2, 5) = " + importRow["FamilyDoctor"] + "";
+                                //MessageBox.Show(qr_doc);
+                                SqlCommand command_doc = new SqlCommand(qr_doc, conn1);
+
+                                // MessageBox.Show(count.ToString());
+
+                                using (SqlDataReader reader_doc = command_doc.ExecuteReader())
+                                {
+                                    int numberOfRecordsDoc = 0;
+                                    while (reader_doc.Read())
+                                    {
+                                        numberOfRecordsDoc++;
+                                        //MessageBox.Show(reader_doc[0].ToString()+'='+importRow["PatientGuid"]);
+                                        cmd.Parameters.AddWithValue("@Identifier03", reader_doc[0].ToString());
+
+                                    }
+
+                                    if (numberOfRecordsDoc == 0)
+                                    {
+                                        cmd.Parameters.AddWithValue("@Identifier03", DBNull.Value);
+                                    }
+                                }
+                                command_doc.ExecuteNonQuery();
+                            }
+                            else
+                            {
+                                cmd.Parameters.AddWithValue("@Identifier03", DBNull.Value);
+                            }
+                            conn1.Close();
+                        }
+
+                        /**********************************************************************************/
                         cmd.ExecuteNonQuery();
+                        // End Insert Table Patient
+
+                        // Risk Factor
+                        if (importRow["Smoke"].ToString() == "Y" || importRow["SmokeInThePast"].ToString() == "Y" || importRow["TakeDrugs"].ToString() == "Y")
+                        {
+
+                            try
+                            {
+                                var guid = Guid.NewGuid().ToString();
+                                string txtRF = "";
+                                //MessageBox.Show(importRow["PatientGuid"].ToString());
+
+
+                                SqlCommand cmd_rf = new SqlCommand("insert into RiskFactor(Id,PatientId,RiskFactor)" +
+                                                                   "VALUES(@RFId,@RFPatientId,@RiskFactor)",
+                                                                    conn);
+                                cmd_rf.Parameters.AddWithValue("@RFId", guid.ToString());
+                                cmd_rf.Parameters.AddWithValue("@RFPatientId", importRow["PatientGuid"]);
+
+                                if (importRow["Smoke"].ToString() == "Y")
+                                {
+                                    if (importRow["SmokeInThePast"].ToString() == "Y" || importRow["SmokeInThePast"].ToString() == "Y")
+                                        txtRF = "Smoke /";
+                                    else
+                                        txtRF = "Smoke ";
+                                }
+                                if (importRow["SmokeInThePast"].ToString() == "Y")
+                                {
+                                    txtRF = "Smoke /";
+                                    if (importRow["SmokeInThePast"].ToString() == "Y")
+                                        txtRF = txtRF + " Smoke In The Past /";
+                                    else
+                                        txtRF = txtRF + " Smoke In The Past ";
+                                }
+                                if (importRow["SmokeInThePast"].ToString() == "Y")
+                                {
+                                    txtRF = txtRF + " Take Drugs";
+                                }
+
+                                cmd_rf.Parameters.AddWithValue("@RiskFactor", txtRF);
+                                cmd_rf.ExecuteNonQuery();
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine("Error Risk Factor !!!");
+                                Console.WriteLine(e.Message);
+                            }
+                        }
+                        // End Risk Factor
+
+                        // Phone Number
+                        string[] arr_phone = new string[3];
+                        arr_phone[0] = importRow["Phone1"].ToString();
+                        arr_phone[1] = importRow["Phone2"].ToString();
+                        arr_phone[2] = importRow["Phone3"].ToString();
+
+                        string[] arr_notePhone = new string[3];
+                        arr_notePhone[0] = importRow["PhoneNote1"].ToString();
+                        arr_notePhone[1] = importRow["PhoneNote2"].ToString();
+                        arr_notePhone[2] = importRow["PhoneNote3"].ToString();
+
+                       var i = 0;
+                       foreach (var item in arr_phone)
+                       {
+                           if (item.Trim() != "")
+                           {
+                               SqlCommand cmd_phone = new SqlCommand("insert into PhoneNumber(Id,PatientId,Number,TypeLookup,Note,IsPreferred)" +
+                                                        "VALUES(@IdPhoneNumber,@PatientGuidPhone,@NumberPhone,@TypeLookup,@NotePhone,@IsPreferred)",
+                                                        conn);
+                               var guid = Guid.NewGuid().ToString();
+                               cmd_phone.Parameters.AddWithValue("@IdPhoneNumber", guid.ToString());
+                               cmd_phone.Parameters.AddWithValue("@PatientGuidPhone", importRow["PatientGuid"]);
+                               cmd_phone.Parameters.AddWithValue("@NumberPhone", item);
+
+                               int preferred;
+                               if (i == 0)
+                                   preferred = 1;
+                               else
+                                   preferred = 0;
+                               cmd_phone.Parameters.AddWithValue("@IsPreferred", preferred);
+                               
+                               // Phone = Item
+                               if (arr_notePhone[i].Trim() == "")
+                               {
+                                   cmd_phone.Parameters.AddWithValue("@NotePhone", DBNull.Value);
+                                   cmd_phone.Parameters.AddWithValue("@TypeLookup", DBNull.Value);
+                               }
+                               else
+                               {
+                                   cmd_phone.Parameters.AddWithValue("@NotePhone", arr_notePhone[i]);
+                                   //cmd_phone.Parameters.AddWithValue("@TypeLookup", DBNull.Value);
+
+                                   string search_type = Regex.Replace(arr_notePhone[i], @"(\s+|@|&|'|\(|\)|<|>|#)", "");
+
+                                   string qr = "SELECT top 1 Id FROM Lookup where Type = 'PhoneType' and (Fr like '%" + search_type + "%' or En like '%" + search_type + "%') ";
+                                   //MessageBox.Show(qr);
+                                   SqlCommand command_type = new SqlCommand(qr, conn);
+
+                                  // MessageBox.Show(count.ToString());
+
+                                   using (SqlDataReader reader_type = command_type.ExecuteReader())
+                                   {
+                                       int numberOfRecords = 0;
+                                       while (reader_type.Read())
+                                       {
+                                           numberOfRecords++;
+                                           //MessageBox.Show(reader_type[0].ToString()+'='+importRow["PatientGuid"]);
+                                           cmd_phone.Parameters.AddWithValue("@TypeLookup", reader_type[0].ToString());
+                                           
+                                       }
+
+                                       if (numberOfRecords == 0)
+                                       {
+                                           cmd_phone.Parameters.AddWithValue("@TypeLookup", DBNull.Value);
+                                       }
+                                   }
+                               }
+                               //MessageBox.Show(importRow["PatientGuid"] + "===>" + item + "===" + arr_notePhone[i]);
+                               i++;
+
+                               cmd_phone.ExecuteNonQuery();
+                           }
+                       }
+                       // End Phone Number
+                       
+
                     }
-                    // End Insert Table Patient
+                    // End 
                     /**********************************************************************************/
                     /**********************************************************************************/
                 }
@@ -434,6 +527,7 @@ namespace Evaluation_LoadPatient
                     Console.WriteLine("Error in Data !!!");
                     Console.WriteLine(e.Message);
                 }
+                conn.Close();
             }
         }
     }
